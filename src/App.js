@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { TextField, MenuItem, Button, Box, Typography } from "@mui/material";
 import { Table, TableBody, TableCell, TableContainer, TableRow, Paper } from "@mui/material";
 
+const baseurl = import.meta.env.VITE_API_BASE_URL;
+
 
 const initialState = {
   gender: "",
@@ -32,7 +34,7 @@ export default function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://127.0.0.1:5000/prediction/", {
+      const response = await fetch("${baseurl}/prediction/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
