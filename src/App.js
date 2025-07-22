@@ -34,7 +34,7 @@ export default function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("${baseurl}/prediction/", {
+      const response = await fetch(baseurl + "/prediction/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
