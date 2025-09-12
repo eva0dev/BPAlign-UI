@@ -7,8 +7,9 @@ export default function FeatureImportanceTab() {
   const [error, setError] = useState(null);
 
   // Hardcoded backend URL for testing
-  const base = "http://127.0.0.1:5000";
-  const url = base + "/artifacts/feature_importances.json";
+ // const base = "http://127.0.0.1:5000";
+ //const url = base + "/artifacts/feature_importances.json";
+ const url = `${import.meta.env.VITE_API_BASE_URL}/artifacts/feature_importances.json`;
 
   useEffect(() => {
     console.log("Fetching Feature Importance JSON from:", url);

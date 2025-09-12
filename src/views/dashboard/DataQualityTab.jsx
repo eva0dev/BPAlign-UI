@@ -22,8 +22,9 @@ export default function DataQualityTab() {
   const [classComment, setClassComment] = useState("");
   const [error, setError] = useState(null);
 
-  const base = "http://127.0.0.1:5000";
-  const url = base + "/artifacts/data_quality.csv";
+  // const base = "http://127.0.0.1:5000";
+  // const url = base + "/artifacts/data_quality.csv";
+  const url = `${import.meta.env.VITE_API_BASE_URL}/artifacts/data_quality.csv`;
 
   const selectedCols = [
     "male",
