@@ -5,15 +5,14 @@ import { Box, Typography, Table, TableBody, TableCell, TableRow, TableContainer,
 export default function FeatureImportanceTab() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [consistencyScore, setConsistencyScore] = useState(null);
+  const [consistencyDetails, setConsistencyDetails] = useState(null);
 
-  // Hardcoded backend URL for testing
- // const base = "http://127.0.0.1:5000";
- //const url = base + "/artifacts/feature_importances.json";
- const url = `${import.meta.env.VITE_API_BASE_URL}/artifacts/feature_importances.json`;
+  const url = `${import.meta.env.VITE_API_BASE_URL}/artifacts/feature_importances.json`;
 
   useEffect(() => {
-    console.log("Fetching Feature Importance JSON from:", url);
     const ac = new AbortController();
+    console.log("Fetching Feature Importance JSON from:", url);
 
     fetch(url, { signal: ac.signal })
       .then(async (res) => {
@@ -25,7 +24,37 @@ export default function FeatureImportanceTab() {
           throw new Error(`Response is not valid JSON:\n${text}`);
         }
       })
-      .then((json) => setData(json))
+      .then((json) => {
+        setData(json);
+
+        // --- Feature Importance Consistency Score ---
+        const models = Object.entries(json || {}); // [ [modelName, feats], ... ]
+        if (models.length > 0) {
+          const featureNames = Object.keys(models[0][1]);
+
+          // normalized importance per model
+          const normalized = models.map(([modelName, feats]) => {
+            const values = featureNames.map(f => Number(feats[f]) || 0);
+            const max = Math.max(...values, 1);
+            return { modelName, normalized: values.map(v => v / max) };
+          });
+
+          // calculate variance per feature
+          const variances = featureNames.map((_, i) => {
+            const vals = normalized.map(m => m.normalized[i]);
+            const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+            const varSum = vals.reduce((a, b) => a + (b - mean) ** 2, 0);
+            return { feature: featureNames[i], mean, variance: varSum / vals.length };
+          });
+
+          // Consistency Score
+          const avgVariance = variances.reduce((a, v) => a + v.variance, 0) / variances.length;
+          const score = Math.max(0, 100 - avgVariance * 100);
+
+          setConsistencyScore(score.toFixed(2));
+          setConsistencyDetails({ normalized, variances });
+        }
+      })
       .catch((e) => setError(e.message || String(e)));
 
     return () => ac.abort();
@@ -53,6 +82,60 @@ export default function FeatureImportanceTab() {
 
   return (
     <Box>
+      {/* Feature Importance Consistency Score Box */}
+      <Box sx={{ mb: 2, p: 2, border: "1px solid #ccc", borderRadius: 2, backgroundColor: "#f9f9f9" }}>
+        <Typography variant="h6" gutterBottom>
+          Feature Importance Consistency Score: {consistencyScore} / 100
+        </Typography>
+        <Typography variant="body2" color="textSecondary" sx={{ ml: 2 }}>
+          Calculated based on variance of normalized feature importance across models.
+        </Typography>
+        <Typography variant="body2" color="textSecondary" sx={{ ml: 2 }}>
+          Formula: Consistency = 100 - (average variance of normalized feature importance × 100)
+        </Typography>
+        <Typography variant="body2" color="textSecondary" sx={{ ml: 2 }}>
+          Lower variance → higher consistency → score closer to 100
+        </Typography>
+
+        {/* Step-by-step table */}
+        {consistencyDetails && (
+          <TableContainer component={Paper} variant="outlined" sx={{ mt: 1 }}>
+            <Table size="small">
+              <TableBody>
+                {/* Header */}
+                <TableRow>
+                  <TableCell sx={{ fontWeight: "bold" }}>Feature</TableCell>
+                  {consistencyDetails.normalized.map(m => (
+                    <TableCell key={m.modelName} sx={{ fontWeight: "bold" }}>{m.modelName}</TableCell>
+                  ))}
+                  <TableCell sx={{ fontWeight: "bold" }}>Mean</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>Variance</TableCell>
+                </TableRow>
+
+                {/* Rows */}
+                {consistencyDetails.variances.map((v, i) => (
+                  <TableRow key={v.feature}>
+                    <TableCell>{v.feature}</TableCell>
+                    {consistencyDetails.normalized.map(m => (
+                      <TableCell key={m.modelName}>{m.normalized[i].toFixed(4)}</TableCell>
+                    ))}
+                    <TableCell>{v.mean.toFixed(4)}</TableCell>
+                    <TableCell>{v.variance.toFixed(4)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+
+        {consistencyScore && (
+          <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+            Final Consistency Score = 100 - (average variance × 100) = {consistencyScore}
+          </Typography>
+        )}
+      </Box>
+
+      {/* Feature Importance Table */}
       <Typography variant="h6" mb={2}>
         Feature Importance
       </Typography>

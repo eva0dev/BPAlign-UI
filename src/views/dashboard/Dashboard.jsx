@@ -14,8 +14,9 @@ import {
 import FeatureImportanceTab from "./FeatureImportanceTab";
 import DisagreementTab from "./DisagreementTab"; 
 import ModelReportsTab from "./ModelReportsTab"; 
-import ROCChartTab from "./ROCChartTab"
-import DataQualityTab from "./DataQualityTab"
+import ROCChartTab from "./ROCChartTab";
+import DataQualityTab from "./DataQualityTab";
+import SystemStabilityTab from "./SystemStabilityTab";
 const baseurl = import.meta.env.VITE_API_BASE_URL;
 
 const tabConfig = [
@@ -24,6 +25,7 @@ const tabConfig = [
   { label: "Model Reports", component: ModelReportsTab },
   { label: "Disagreement Cases", component: DisagreementTab },
   { label: "ROC Curves", component: ROCChartTab },
+  { label: "Overall System Stability", component: SystemStabilityTab }
 ];
 
 export default function Dashboard() {
